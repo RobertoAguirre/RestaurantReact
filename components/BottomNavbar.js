@@ -1,39 +1,92 @@
-import * as React from 'react';
-import { BottomNavigation, Text } from 'react-native-paper';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
 
-const HomeRoute = () => <Text>Inicio</Text>;
-const OrdenRoute = () => <Text>Ordenes</Text>;
-const CarRoute = () => <Text>Carrito</Text>;
-const AccountRoute = () => <Text>Cuenta</Text>;
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Text, BottomNavigation } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ordenes from '../screens/Ordenes';
+import Home from '../screens/Home';
+import Cuenta from '../screens/Cuenta';
+import Carrito from '../screens/Cuenta';
+const Tab = createBottomTabNavigator();
 
-const CustomBottomNavigation = () => {
-  const [index, setIndex] = React.useState(0);
-  const [routes] = React.useState([
-    { key: 'home', title: 'Home', icon: 'home', inactiveIcon: 'home-outline' },
-    { key: 'orden', title: 'Ordenes', icon: 'clipboard-list', inactiveIcon: 'clipboard-list-outline' },
-    { key: 'carrito', title: 'Carrito', icon: 'cart', inactiveIcon: 'cart-outline' },
-    { key: 'cuenta', title: 'Cuenta', icon: 'account', inactiveIcon: 'account-outline' },
-  ]);
-
-  const renderScene = BottomNavigation.SceneMap({
-    home: HomeRoute,
-    orden: OrdenRoute,
-    carrito: CarRoute,
-    cuenta: AccountRoute,
-  });
-
+export default function BottomNavbar() {
   return (
-    <BottomNavigation
-      navigationState={{ index, routes }}
-      onIndexChange={setIndex}
-      renderScene={renderScene}
-      barStyle={{ backgroundColor: '#ffff' }} // Change 'your_color_here' to your desired background color
-      activeColor='blue' // Change 'your_active_color_here' to your desired color for focused icons
-      inactiveColor='purple' // Change 'your_inactive_color_here' to your desired color for non-focused icons
-      
-    />
-  );
-};
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+      tabBar={({ navigation, state, descriptors, insets }) => (
+        <BottomNavigation.Bar
+          navigationState={state}
+         safeAreaInsets={insets}
+          onTabPress={({ route, preventDefault }) => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
 
-export default CustomBottomNavigation;
+            if (event.defaultPrevented) {
+              preventDefault();
+            } else {
+             navigation.dispatch({
+                ...CommonActions.navigate(route.name, route.params),
+                target: state.key,
+              });
+            }
+          }}
+          renderIcon={({ route, focused, color }) => {
+            const { options } = descriptors[route.key];
+            if (options.tabBarIcon) {
+              return options.tabBarIcon({ focused, color, size: 24 });
+            }
+
+            return null;
+          }}
+          getLabelText={({ route }) => {
+            const { options } = descriptors[route.key];
+            const label =
+              options.tabBarLabel !== undefined
+                ? options.tabBarLabel
+                : options.title !== undefined
+                ? options.title
+                : route.title;
+
+            return label;
+          }}
+        />
+      )}
+    >
+      <Tab.Screen onPress={() => navigation.navigate('Home')}
+        name="Home"
+        
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size }) => {
+            return <Icon name="home" size={size} color={color} />;
+          },
+        }}
+      />
+      <Tab.Screen onPress={() => navigation.navigate('Ordenes')}
+        name="Settings"
+        
+        options={{
+          tabBarLabel: 'Settings',
+          tabBarIcon: ({ color, size }) => {
+            return <Icon name="cog" size={size} color={color} />;
+          },
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

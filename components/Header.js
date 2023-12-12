@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Divider, useTheme } from 'react-native-paper';
-import { View, StyleSheet, TouchableOpacity, Modal, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Modal, Text, Dimensions } from 'react-native';
 import { Appbar, Avatar, RadioButton } from 'react-native-paper';
 
 export default function Header({ title }) {
@@ -21,10 +21,10 @@ export default function Header({ title }) {
   };
 
   return (
-    <Appbar.Header style={{ backgroundColor: theme.colors.primary }}>
+    <Appbar.Header style={{ backgroundColor: theme.colors.primary, height: 50 }}>
       <TouchableOpacity onPress={showRadioButtonModal}>
         <Avatar.Icon
-          size={60}
+          size={Dimensions.get('window').width * 0.1} // Adjust the size as needed
           color="#E0A966"
           backgroundColor="white"
           icon="map-marker-radius"
@@ -37,7 +37,7 @@ export default function Header({ title }) {
         onRequestClose={hideRadioButtonModal}
       >
         <View style={styles.modalContent}>
-          <Text >Selecciona una ciudad </Text>
+          <Text>Selecciona una ciudad</Text>
           <RadioButton.Group onValueChange={handleOptionChange} value={selectedOption}>
             <View>
               <RadioButton.Item label="Chihuahua" value="chihuahua" />
@@ -56,7 +56,10 @@ export default function Header({ title }) {
           style={styles.avatarContainer}
           onPress={() => console.log('Avatar pressed!')}
         >
-          <Avatar.Image size={40} source={require('../assets/akari_icon.png')} />
+          <Avatar.Image
+            size={Dimensions.get('window').width * 0.08} // Adjust the size as needed
+            source={require('../assets/akari_icon.png')}
+          />
         </TouchableOpacity>
       </View>
     </Appbar.Header>
@@ -66,18 +69,18 @@ export default function Header({ title }) {
 const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
-    alignItems: 'center', // Change to 'center' to vertically center the avatar
-    justifyContent: 'flex-end', // Add space between title and avatar
-    paddingHorizontal: 600,
-    paddingTop: 1, // Add horizontal padding for spacing
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: Dimensions.get('window').width * 0.05, // Adjust the padding as needed
+    paddingTop: 1,
   },
   headerText: {
-    fontSize: 20,
+    fontSize: 16, // Adjust the font size as needed
     color: 'black',
   },
   avatarContainer: {
     position: 'absolute',
-    right: 16, // Adjust the right value as needed
+    right: Dimensions.get('window').width * 0.02, // Adjust the position as needed
   },
   modalContent: {
     flex: 1,
@@ -86,6 +89,4 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 16,
   },
-
-
 });
