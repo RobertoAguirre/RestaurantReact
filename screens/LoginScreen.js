@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { View, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
@@ -10,6 +11,21 @@ export default function LoginScreen({ navigation }) {
     const [error, setError] = useState(null);
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+
+    // Limpiar los valores al abrir la pantalla
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            // Restablecer los valores al volver a la pantalla
+            setEmail('');
+            setPassword('');
+            setError(null);
+            setEmailError('');
+            setPasswordError('');
+        });
+
+        // Limpiar el efecto
+        return unsubscribe;
+    }, [navigation]);
 
     const authenticate = async () => {
         setLoading(true);
@@ -44,12 +60,23 @@ export default function LoginScreen({ navigation }) {
                 email: email,
                 password: password,
             });
-            console.log(response.data);
-            Alert.alert("Bienvenido", "Login exitoso");
-            navigation.navigate('HomeScreen');
-        } catch (e) {
-            setError(e);
-            console.log('Datos incorrectos');
+
+            console.log("Response from server:", response.data); // Verificar la estructura de la respuesta
+
+            // Verificar si la respuesta contiene la información esperada con 'id' en lugar de '_id'
+            if (response.data.access && response.data.id) {
+                const userId = response.data.id; // Acceder al ID de usuario utilizando 'id'
+
+                // Guardar el ID del usuario en AsyncStorage y el email para actualizar datos en un futuro
+                await AsyncStorage.setItem('userId', userId);
+
+                Alert.alert("Bienvenido", "Login exitoso");
+                navigation.navigate('Editar Perfil');
+            }
+        } catch (error) {
+            // Manejar el error aquí
+            console.error('Error al autenticar usuario:', error);
+            setError('Error al autenticar usuario.');
         } finally {
             setLoading(false);
         }

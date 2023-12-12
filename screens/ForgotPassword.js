@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { View, StyleSheet, Image, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { Avatar, useTheme, Button, Text, Divider, TextInput } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function ForgotPassword() {
     const theme = useTheme();
@@ -14,12 +16,20 @@ export default function ForgotPassword() {
         return re.test(email);
     };
 
-    const handleSendLink = () => {
+    const handleSendLink = async () => {
         if (!validateEmail(email)) {
             setEmailError('Ingresa un correo electrónico válido');
         } else {
             setEmailError('');
             console.log('Enviar enlace');
+
+            // Limpia el valor en AsyncStorage
+            AsyncStorage.setItem('userEmailForgotPassword', '');
+
+            // Guardar el email para actualizar contraseña
+            await AsyncStorage.setItem('userEmailForgotPassword', email);
+
+            navigation.navigate('Codigo cambiar contraseña');
         }
     };
 

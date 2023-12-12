@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme, Appbar, Divider, TextInput, Button } from "react-native-paper";
-import { View, StyleSheet, Text, Image, KeyboardAvoidingView, ScrollView, Platform, SafeAreaView } from 'react-native';
+import { View, StyleSheet, Text, Image, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TouchableOpacity } from "react-native";
 
 export default function EditProfile() {
     const theme = useTheme();
@@ -9,38 +11,67 @@ export default function EditProfile() {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [nameError, setNameError] = useState("");
     const [phoneNumberError, setPhoneNumberError] = useState("");
+    const [loading, setLoading] = useState(true);
     const navigation = useNavigation();
 
-    const handleSaveProfile = () => {
+    useEffect(() => {
+        const fetchUserId = async () => {
+            try {
+                const userId = await AsyncStorage.getItem('userId');
 
-        if (name.trim() === "") {
-            setNameError("El nombre es obligatorio");
-        }
-        else{
-            setNameError("");
-        }
+                if (userId) {
+                    await getUserData(userId);
+                } else {
+                    console.log("No se encontró un ID de usuario en AsyncStorage.");
+                }
+            } catch (error) {
+                console.error("Error al obtener el ID de usuario desde AsyncStorage:", error);
+            }
+        };
+        fetchUserId();
+    }, []);
 
-        if (!/^\d+$/.test(phoneNumber)) {
-            setPhoneNumberError("Ingrese un número de teléfono válido");
-        }
-        else{
-            setPhoneNumberError("");
-        }
+    const getUserData = async (userId) => {
+        try {
+            const response = await fetch(`http://50.21.186.23:41000/api/v1/users/${userId}`);
+            const data = await response.json();
+            console.log("Data from API:", data);
 
-        if (name.trim() === "" || phoneNumber.trim() === ""){
-            console.log('Existe al menos un campo vacio, no se puede guardar')
-            return;
-        }
+            if (data && data.email && data.username) {
+                setName(data.email);
+                setPhoneNumber(data.username);
 
-        if(name !== '' && phoneNumber !== ''){
-            console.log('Se puede guardar perfil');
+                // Limpia el valor en AsyncStorage
+                AsyncStorage.setItem('userEmail', '');
+
+                // Guardar el Mail del usuario en AsyncStorage para verificar junto con su contraseña al editar la contraseña 
+                await AsyncStorage.setItem('userEmail', data.email);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
     };
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#0000ff" />
+            </View>
+        );
+    }
+
+    const handleSaveProfile = () => {
+        //Modificar perfil
+    };
+
+    const windowWidth = Dimensions.get('window').width;
 
     return (
         <ScrollView keyboardShouldPersistTaps="always">
             <View>
-                <Image source={require('../assets/Salmon.jpg')} style={styles.TopImage} />
+                <Image source={require('../assets/Salmon.jpg')} style={{ ...styles.TopImage, width: windowWidth }} />
                 <Image source={require('../assets/Samurai.png')} style={styles.profilePicture} />
             </View>
 
@@ -49,7 +80,7 @@ export default function EditProfile() {
                 <Divider style={styles.divider} />
             </View>
 
-            <View style={styles.nameInput}>
+            <View style={{ ...styles.nameInput, width: windowWidth - 40 }}>
                 <TextInput
                     label="Nombre"
                     value={name}
@@ -65,7 +96,7 @@ export default function EditProfile() {
                 <Text style={{ color: 'red' }}>{nameError}</Text>
             </View>
 
-            <View style={styles.phoneNumberInput}>
+            <View style={{ ...styles.phoneNumberInput, width: windowWidth - 40 }}>
                 <TextInput
                     label="Número de teléfono"
                     value={phoneNumber}
@@ -83,7 +114,15 @@ export default function EditProfile() {
             </View>
 
             <View>
-                <Button buttonColor="#000000" style={styles.editProfileButton} mode="contained" onPress={handleSaveProfile}>
+                <Text style={{ width: windowWidth - 40, marginLeft: 20 }}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Ingresar contraseña vieja')}>
+                        <Text>¿Deseas modificar tu contraseña?</Text>
+                    </TouchableOpacity>
+                </Text>
+            </View>
+
+            <View>
+                <Button buttonColor="#000000" style={{ ...styles.editProfileButton, width: windowWidth - 100 }} mode="contained" onPress={handleSaveProfile}>
                     <Text style={{ fontSize: 11.5 }}>Guardar Perfil</Text>
                 </Button>
             </View>
@@ -93,7 +132,6 @@ export default function EditProfile() {
 
 const styles = StyleSheet.create({
     TopImage: {
-        width: '100%',
         height: 200,
     },
     profilePicture: {
@@ -106,22 +144,20 @@ const styles = StyleSheet.create({
     divider: {
         marginTop: 5,
         alignSelf: "center",
-        width: 350,
+        width: '100%',
     },
     nameInput: {
         marginTop: 10,
         marginLeft: 20,
-        width: 350,
     },
     phoneNumberInput: {
         marginLeft: 20,
-        width: 350,
+        paddingBottom: 10,
     },
     editProfileButton: {
-        marginTop: 130,
+        marginTop: 100,
         alignSelf: 'center',
         color: "#FFFFFF",
         borderRadius: 50,
-        width: 200,
     }
 });
